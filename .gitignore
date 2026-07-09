@@ -1,0 +1,6 @@
+data/
+work-test-data/
+__pycache__/
+backend/__pycache__/
+tests/__pycache__/
+*.pyc
