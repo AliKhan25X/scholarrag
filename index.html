@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ScholarRAG - Research Assistant</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-icon">SR</div>
+          <div>
+            <p class="eyebrow">RAG Research System</p>
+            <h1>ScholarRAG</h1>
+          </div>
+        </div>
+
+        <section class="upload-panel">
+          <p class="eyebrow">Knowledge Base</p>
+          <label class="drop-zone" for="fileInput">
+            <span>Upload research notes</span>
+            <strong>.pdf .txt .md .csv .json</strong>
+          </label>
+          <input id="fileInput" type="file" accept=".pdf,.txt,.md,.csv,.json" multiple />
+          <button id="loadSampleButton" class="secondary-button">Load sample papers</button>
+        </section>
+
+        <section class="stat-panel">
+          <div><span>Documents</span><strong id="docCount">0</strong></div>
+          <div><span>Chunks</span><strong id="chunkCount">0</strong></div>
+          <div><span>Avg confidence</span><strong id="confidenceMetric">0%</strong></div>
+        </section>
+
+        <section class="document-panel">
+          <div class="section-head">
+            <p class="eyebrow">Indexed Documents</p>
+            <button id="selectAllDocsButton" class="mini-button">All</button>
+          </div>
+          <div id="documentList" class="document-list"></div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Local RAG MVP</p>
+            <h2>Ask research questions with citations</h2>
+          </div>
+          <button id="resetButton" class="icon-button" title="Reset workspace" aria-label="Reset workspace">R</button>
+        </header>
+
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Question</p>
+            <textarea id="questionInput" placeholder="Ask: What is the main contribution of the retrieval system?"></textarea>
+            <div class="query-actions">
+              <select id="providerSelect" aria-label="Answer provider">
+                <option value="extractive">Extractive</option>
+                <option value="template-llm">Local LLM Style</option>
+                <option value="ollama">Ollama</option>
+              </select>
+              <button id="askButton" class="primary-button">Ask ScholarRAG</button>
+              <button id="exampleButton" class="secondary-button">Try example</button>
+            </div>
+          </div>
+          <div class="answer-panel">
+            <p class="eyebrow">Grounded Answer</p>
+            <div id="answerBox" class="answer-box">
+              Upload documents or load samples, then ask a question. Answers will cite the chunks used.
+            </div>
+            <div class="answer-actions">
+              <button id="exportAnswerButton" class="secondary-button" disabled>Export answer</button>
+              <button id="exportSessionButton" class="secondary-button" disabled>Export session</button>
+              <button id="printButton" class="secondary-button" disabled>Print/PDF</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Retrieved Context</p>
+                <h3>Top Evidence</h3>
+              </div>
+              <span id="retrievalStatus" class="pill">Idle</span>
+            </div>
+            <div id="evidenceList" class="evidence-list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Evaluation</p>
+                <h3>RAG Quality</h3>
+              </div>
+              <span id="latencyMetric" class="pill">0 ms</span>
+            </div>
+            <div class="score-grid">
+              <div class="score-card"><span>Relevance</span><strong id="relevanceScore">0%</strong></div>
+              <div class="score-card"><span>Faithfulness</span><strong id="faithfulnessScore">0%</strong></div>
+              <div class="score-card"><span>Citation Coverage</span><strong id="citationScore">0%</strong></div>
+              <div class="score-card"><span>Hallucination Risk</span><strong id="riskScore">Low</strong></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Citation Explorer</p>
+              <h3>Source Map</h3>
+            </div>
+            <span id="citationStatus" class="pill">No sources</span>
+          </div>
+          <div id="citationMap" class="citation-map"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Evaluation Dashboard</p>
+              <h3>RAG Monitoring</h3>
+            </div>
+            <span id="dashboardStatus" class="pill">No runs</span>
+          </div>
+          <div class="dashboard-controls">
+            <div class="control-group" aria-label="Dashboard metric">
+              <span>Metric</span>
+              <button class="metric-toggle active" data-metric="confidence">Confidence</button>
+              <button class="metric-toggle" data-metric="relevance">Relevance</button>
+              <button class="metric-toggle" data-metric="faithfulness">Faithfulness</button>
+              <button class="metric-toggle" data-metric="citation">Citation</button>
+            </div>
+            <div class="control-group" aria-label="Risk filter">
+              <span>Risk</span>
+              <button class="risk-toggle active" data-risk="all">All</button>
+              <button class="risk-toggle" data-risk="low">Low</button>
+              <button class="risk-toggle" data-risk="medium">Medium</button>
+              <button class="risk-toggle" data-risk="high">High</button>
+            </div>
+          </div>
+          <div class="monitor-grid">
+            <div class="monitor-card">
+              <span>Avg relevance</span>
+              <strong id="avgRelevanceMetric">0%</strong>
+            </div>
+            <div class="monitor-card">
+              <span>Avg faithfulness</span>
+              <strong id="avgFaithfulnessMetric">0%</strong>
+            </div>
+            <div class="monitor-card">
+              <span>Avg citation</span>
+              <strong id="avgCitationMetric">0%</strong>
+            </div>
+            <div class="monitor-card">
+              <span>High-risk runs</span>
+              <strong id="highRiskMetric">0</strong>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div>
+              <div class="mini-head">
+                <strong id="trendTitle">Confidence trend</strong>
+                <span id="trendSubtitle">latest 10 runs</span>
+              </div>
+              <div id="trendChart" class="trend-chart"></div>
+            </div>
+            <div>
+              <div class="mini-head">
+                <strong>Risk breakdown</strong>
+                <span>low / medium / high</span>
+              </div>
+              <div id="riskBreakdown" class="risk-breakdown"></div>
+            </div>
+          </div>
+          <div id="dashboardInsight" class="dashboard-insight"></div>
+          <div class="mini-head">
+            <strong>Needs review</strong>
+            <span>lowest confidence answers</span>
+          </div>
+          <div id="reviewList" class="review-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Benchmark Suite</p>
+              <h3>Regression Tests</h3>
+            </div>
+            <span id="benchmarkStatus" class="pill">Not run</span>
+          </div>
+          <div class="benchmark-actions">
+            <button id="runBenchmarkButton" class="primary-button">Run benchmark</button>
+            <span id="benchmarkSummary">Load sample papers, then run grounded retrieval checks.</span>
+          </div>
+          <div id="benchmarkList" class="benchmark-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Research Session</p>
+              <h3>Question History</h3>
+            </div>
+            <span id="historyCount" class="pill">0 saved</span>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Export Preview</p>
+              <h3>Markdown Report</h3>
+            </div>
+            <span id="exportStatus" class="pill">Ready</span>
+          </div>
+          <textarea
+            id="exportPreview"
+            class="export-preview"
+            readonly
+            placeholder="Exported Markdown appears here after you export an answer or session."
+          ></textarea>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Architecture Trace</p>
+              <h3>Pipeline Run</h3>
+            </div>
+          </div>
+          <div class="pipeline">
+            <div>Upload</div>
+            <div>Extract</div>
+            <div>Chunk</div>
+            <div>Embed</div>
+            <div>Retrieve</div>
+            <div>Answer</div>
+            <div>Cite</div>
+            <div>Evaluate</div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
